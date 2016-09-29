@@ -25,6 +25,7 @@ public struct SKPhotoBrowserOptions {
     public static var displayCommentButton = false
     public static var displayLikeButton = false
     public static var displayMoreButton = false
+    public static var displayShareButton = false
     
     public static var displayUserButton = false
     
@@ -32,6 +33,7 @@ public struct SKPhotoBrowserOptions {
     public static var handleCommentButtonPressed : ((_ object: NSObject?)->Void)? = nil
     public static var handleLikeButtonPressed : ((_ object: NSObject?)->Void)? = nil
     public static var handleMoreButtonPressed : ((_ object: NSObject?)->Void)? = nil
+    public static var handleShareButtonPressed : ((_ object: NSObject?, _ image: UIImage)->Void)? = nil
     
     public static var handleEntryLoaded : ((_ object: NSObject?, _ photo: SKPhotoProtocol?)->Void)? = nil
     

@@ -20,7 +20,7 @@ class SKButton: UIButton {
         return UI_USER_INTERFACE_IDIOM() == .phone
             ?  UIEdgeInsets(top: 15.25, left: 15.25, bottom: 15.25, right: 15.25) : UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
     }
-    var size: CGSize = CGSize(width: 44, height: 44)
+    var size: CGSize = CGSize(width: 60, height: 60)
     var margin: CGFloat = 5
     
     var buttonTopOffset: CGFloat { return 5 }
@@ -74,41 +74,6 @@ class SKCloseButton: SKButton {
         }
         hideFrame = CGRect(x: margin, y: -20, width: size.width, height: size.height)
     }
-    
-    override func updateFrame() {
-    }
-}
-
-class SKMoreButton: SKButton {
-    let imageName = "btn_common_delete_wh"
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setup(imageName)
-        
-        if let image = SKPhotoBrowserOptions.customMoreButtonImage {
-            setupWithImage(image)
-            showFrame = CGRect(x: SKMesurement.screenWidth - 60, y: buttonTopOffset, width: 60, height: 60)
-            hideFrame = CGRect(x: SKMesurement.screenWidth - 60, y: -20, width: 60, height: 60)
-        } else {
-            showFrame = CGRect(x: SKMesurement.screenWidth - size.width, y: buttonTopOffset, width: size.width, height: size.height)
-            hideFrame = CGRect(x: SKMesurement.screenWidth - size.width, y: -20, width: size.width, height: size.height)
-        }
-    }
-    
-    override func updateFrame() {
-    }
-    
-    override func setFrameSize(_ size: CGSize) {
-        let newRect = CGRect(x: SKMesurement.screenWidth - size.width, y: buttonTopOffset, width: size.width, height: size.height)
-        self.frame = newRect
-        showFrame = newRect
-        hideFrame = CGRect(x: SKMesurement.screenWidth - size.width, y: -20, width: size.width, height: size.height)
-    }
-    
 }
 
 class SKDeleteButton: SKButton {
@@ -131,13 +96,82 @@ class SKDeleteButton: SKButton {
         }
     }
     
-    override func updateFrame() {
-    }
-    
     override func setFrameSize(_ size: CGSize) {
         let newRect = CGRect(x: SKMesurement.screenWidth - size.width, y: buttonTopOffset, width: size.width, height: size.height)
         self.frame = newRect
         showFrame = newRect
         hideFrame = CGRect(x: SKMesurement.screenWidth - size.width, y: -20, width: size.width, height: size.height)
+    }
+}
+
+class SKMoreButton: SKButton {
+    let imageName = "btn_common_delete_wh"
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setup(imageName)
+        
+        if let image = SKPhotoBrowserOptions.customMoreButtonImage {
+            setupWithImage(image)
+        }
+        showFrame = CGRect(x: SKMesurement.screenWidth - size.width, y: buttonTopOffset, width: size.width, height: size.height)
+        hideFrame = CGRect(x: SKMesurement.screenWidth - size.width, y: -20, width: size.width, height: size.height)
+    }
+}
+
+class SKCommentButton: SKButton {
+    let imageName = "btn_common_delete_wh"
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setup(imageName)
+        
+        if let image = SKPhotoBrowserOptions.customCommentButtonImage {
+            setupWithImage(image)
+        }
+        showFrame = CGRect(x: (SKMesurement.screenWidth / 2) - (size.width / 2), y: SKMesurement.screenHeight - size.height + buttonTopOffset, width: size.width, height: size.height)
+        hideFrame = CGRect(x: (SKMesurement.screenWidth / 2) - (size.width / 2), y: SKMesurement.screenHeight + size.height + 20, width: size.width, height: size.height)
+    }
+}
+
+class SKLikeButton: SKButton {
+    let imageName = "btn_common_delete_wh"
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setup(imageName)
+        
+        if let image = SKPhotoBrowserOptions.customLikeButtonImage {
+            setupWithImage(image)
+        }
+        showFrame = CGRect(x: SKMesurement.screenWidth - (SKMesurement.screenWidth / 10) - size.width, y: SKMesurement.screenHeight - size.height + buttonTopOffset, width: size.width, height: size.height)
+        hideFrame = CGRect(x: SKMesurement.screenWidth - (SKMesurement.screenWidth / 10) - size.width, y: SKMesurement.screenHeight + size.height + 20, width: size.width, height: size.height)
+    }
+}
+
+class SKShareButton: SKButton {
+    let imageName = "btn_common_delete_wh"
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setup(imageName)
+        
+        if let image = SKPhotoBrowserOptions.customShareButtonImage {
+            setupWithImage(image)
+        }
+        showFrame = CGRect(x: margin + (SKMesurement.screenWidth / 10), y: SKMesurement.screenHeight - size.height + buttonTopOffset, width: size.width, height: size.height)
+        hideFrame = CGRect(x: margin + (SKMesurement.screenWidth / 10), y: SKMesurement.screenHeight + size.height + 20, width: size.width, height: size.height)
     }
 }

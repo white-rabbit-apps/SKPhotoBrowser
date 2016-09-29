@@ -18,8 +18,10 @@ open class SKPhotoBrowser: UIViewController {
     fileprivate var closeButton: SKCloseButton!
     fileprivate var deleteButton: SKDeleteButton!
     fileprivate var moreButton: SKMoreButton!
+    fileprivate var commentButton: SKCommentButton!
+    fileprivate var likeButton: SKLikeButton!
+    fileprivate var shareButton: SKShareButton!
     fileprivate var toolbar: SKToolbar!
-    fileprivate var customToolbar: SKCustomToolbar!
     
     // actions
     fileprivate var activityViewController: UIActivityViewController!
@@ -111,8 +113,10 @@ open class SKPhotoBrowser: UIViewController {
         configureCloseButton()
         configureDeleteButton()
         configureMoreButton()
+        configureCommentButton()
+        configureLikeButton()
+        configureShareButton()
         configureToolbar()
-        configureCustomToolbar()
         
         animator.willPresent(self)
     }
@@ -136,10 +140,12 @@ open class SKPhotoBrowser: UIViewController {
         closeButton.updateFrame()
         deleteButton.updateFrame()
         moreButton.updateFrame()
+        commentButton.updateFrame()
+        likeButton.updateFrame()
+        shareButton.updateFrame()
         pagingScrollView.updateFrame(view.bounds, currentPageIndex: currentPageIndex)
         
         toolbar.frame = frameForToolbarAtOrientation()
-        customToolbar.frame = frameForToolbarAtOrientation()
         
         // where did start
         delegate?.didShowPhotoAtIndex?(currentPageIndex)
@@ -186,7 +192,6 @@ open class SKPhotoBrowser: UIViewController {
         isPerformingLayout = true
         
         toolbar.updateToolbar(currentPageIndex)
-        customToolbar.updateToolbar(currentPageIndex)
         
         // reset local cache
         pagingScrollView.reload()
@@ -260,6 +265,39 @@ public extension SKPhotoBrowser {
             moreButton.setFrameSize(size)
         }
     }
+    
+    func updateCommentButton(_ image: UIImage, size: CGSize? = nil) {
+        if commentButton == nil {
+            configureCommentButton()
+        }
+        commentButton.setImage(image, for: UIControlState())
+        
+        if let size = size {
+            commentButton.setFrameSize(size)
+        }
+    }
+    
+    func updateLikeButton(_ image: UIImage, size: CGSize? = nil) {
+        if commentButton == nil {
+            configureLikeButton()
+        }
+        likeButton.setImage(image, for: UIControlState())
+        
+        if let size = size {
+            likeButton.setFrameSize(size)
+        }
+    }
+    
+    func updateShareButton(_ image: UIImage, size: CGSize? = nil) {
+        if shareButton == nil {
+            configureShareButton()
+        }
+        shareButton.setImage(image, for: UIControlState())
+        
+        if let size = size {
+            shareButton.setFrameSize(size)
+        }
+    }
 }
 
 // MARK: - Public Function For Browser Control
@@ -289,7 +327,6 @@ public extension SKPhotoBrowser {
             }
             isEndAnimationByToolBar = false
             toolbar.updateToolbar(currentPageIndex)
-            customToolbar.updateToolbar(currentPageIndex)
             
             let pageFrame = frameForPageAtIndex(index)
             pagingScrollView.animate(pageFrame)
@@ -388,6 +425,20 @@ internal extension SKPhotoBrowser {
             moreButton.alpha = 1
             moreButton.frame = moreButton.showFrame
         }
+        if SKPhotoBrowserOptions.displayCommentButton {
+            commentButton.alpha = 1
+            commentButton.frame = commentButton.showFrame
+        }
+        
+        if SKPhotoBrowserOptions.displayLikeButton {
+            likeButton.alpha = 1
+            likeButton.frame = likeButton.showFrame
+        }
+        if SKPhotoBrowserOptions.displayShareButton {
+            shareButton.alpha = 1
+            shareButton.frame = shareButton.showFrame
+        }
+        
     }
     
     func pageDisplayedAtIndex(_ index: Int) -> SKZoomingScrollView? {
@@ -502,6 +553,27 @@ internal extension SKPhotoBrowser {
         }
     }
     
+    func commentButtonPressed(_ sender: UIButton) {
+        if let commentButtonAction = SKPhotoBrowserOptions.handleCommentButtonPressed {
+            let photo = self.photos[currentPageIndex]
+            commentButtonAction(photo.underlyingObject)
+        }
+    }
+    
+    func likeButtonPressed(_ sender: UIButton) {
+        if let likeButtonAction = SKPhotoBrowserOptions.handleLikeButtonPressed {
+            let photo = self.photos[currentPageIndex]
+            likeButtonAction(photo.underlyingObject)
+        }
+    }
+    
+    func shareButtonPressed(_ sender: UIButton) {
+        if let shareButtonAction = SKPhotoBrowserOptions.handleShareButtonPressed {
+            let photo = self.photos[currentPageIndex]
+            shareButtonAction(photo.underlyingObject, photo.underlyingImage)
+        }
+    }
+    
     func deleteButtonPressed(_ sender: UIButton) {
         delegate?.removePhoto?(self, index: currentPageIndex) { [weak self] in
             self?.deleteImage()
@@ -593,16 +665,31 @@ private extension SKPhotoBrowser {
         view.addSubview(moreButton)
     }
     
+    func configureCommentButton() {
+        commentButton = SKCommentButton(frame: .zero)
+        commentButton.addTarget(self, action: #selector(commentButtonPressed(_:)), for: .touchUpInside)
+        commentButton.isHidden = !SKPhotoBrowserOptions.displayCommentButton
+        view.addSubview(commentButton)
+    }
+    
+    func configureLikeButton() {
+        likeButton = SKLikeButton(frame: .zero)
+        likeButton.addTarget(self, action: #selector(likeButtonPressed(_:)), for: .touchUpInside)
+        likeButton.isHidden = !SKPhotoBrowserOptions.displayLikeButton
+        view.addSubview(likeButton)
+    }
+    
+    func configureShareButton() {
+        shareButton = SKShareButton(frame: .zero)
+        shareButton.addTarget(self, action: #selector(shareButtonPressed(_:)), for: .touchUpInside)
+        shareButton.isHidden = !SKPhotoBrowserOptions.displayShareButton
+        view.addSubview(shareButton)
+    }
+    
+    
     func configureToolbar() {
         toolbar = SKToolbar(frame: frameForToolbarAtOrientation(), browser: self)
         view.addSubview(toolbar)
-    }
-    
-    func configureCustomToolbar() {
-        if SKPhotoBrowserOptions.displayCustomToolbar {
-            toolbar = SKToolbar(frame: frameForToolbarAtOrientation(), browser: self)
-            view.addSubview(toolbar)
-        }
     }
     
     func setControlsHidden(_ hidden: Bool, animated: Bool, permanent: Bool) {
@@ -628,6 +715,19 @@ private extension SKPhotoBrowser {
                             self.moreButton.alpha = alpha
                             self.moreButton.frame = hidden ? self.moreButton.hideFrame : self.moreButton.showFrame
                         }
+                        if SKPhotoBrowserOptions.displayCommentButton {
+                            self.commentButton.alpha = alpha
+                            self.commentButton.frame = hidden ? self.commentButton.hideFrame : self.commentButton.showFrame
+                        }
+                        if SKPhotoBrowserOptions.displayLikeButton {
+                            self.likeButton.alpha = alpha
+                            self.likeButton.frame = hidden ? self.likeButton.hideFrame : self.likeButton.showFrame
+                        }
+                        if SKPhotoBrowserOptions.displayShareButton {
+                            self.shareButton.alpha = alpha
+                            self.shareButton.frame = hidden ? self.shareButton.hideFrame : self.shareButton.showFrame
+                        }
+                        
                         captionViews.forEach { $0.alpha = alpha }
             },
                        completion: nil)
