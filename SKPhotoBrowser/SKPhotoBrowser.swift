@@ -19,7 +19,11 @@ open class SKPhotoBrowser: UIViewController {
     fileprivate var deleteButton: SKDeleteButton!
     fileprivate var moreButton: SKMoreButton!
     fileprivate var commentButton: SKCommentButton!
+    fileprivate var commentCountButton: UIButton!
     fileprivate var likeButton: SKLikeButton!
+    fileprivate var likeCountButton: UIButton!
+    fileprivate var userButton: SKUserButton!
+    fileprivate var userNameButton: UIButton!
     fileprivate var shareButton: SKShareButton!
     fileprivate var toolbar: SKToolbar!
     
@@ -115,6 +119,7 @@ open class SKPhotoBrowser: UIViewController {
         configureMoreButton()
         configureCommentButton()
         configureLikeButton()
+        configureUserButton()
         configureShareButton()
         configureToolbar()
         
@@ -142,6 +147,7 @@ open class SKPhotoBrowser: UIViewController {
         moreButton.updateFrame()
         commentButton.updateFrame()
         likeButton.updateFrame()
+        userButton.updateFrame()
         shareButton.updateFrame()
         pagingScrollView.updateFrame(view.bounds, currentPageIndex: currentPageIndex)
         
@@ -149,6 +155,10 @@ open class SKPhotoBrowser: UIViewController {
         
         // where did start
         delegate?.didShowPhotoAtIndex?(currentPageIndex)
+        if let entryLoadedAction = SKPhotoBrowserOptions.handleEntryLoaded {
+            let photo = self.photos[currentPageIndex]
+            entryLoadedAction(photo.underlyingObject, photo)
+        }
         
         isPerformingLayout = false
     }
@@ -201,6 +211,10 @@ open class SKPhotoBrowser: UIViewController {
         pagingScrollView.tilePages()
         
         delegate?.didShowPhotoAtIndex?(currentPageIndex)
+        if let entryLoadedAction = SKPhotoBrowserOptions.handleEntryLoaded {
+            let photo = self.photos[currentPageIndex]
+            entryLoadedAction(photo.underlyingObject, photo)
+        }
         
         isPerformingLayout = false
     }
@@ -277,8 +291,15 @@ public extension SKPhotoBrowser {
         }
     }
     
+    func updateCommentCount(_ count: NSNumber) {
+        if commentCountButton == nil {
+            configureCommentButton()
+        }
+        commentCountButton.setTitle(count.intValue.description, for: .normal)
+    }
+    
     func updateLikeButton(_ image: UIImage, size: CGSize? = nil) {
-        if commentButton == nil {
+        if likeButton == nil {
             configureLikeButton()
         }
         likeButton.setImage(image, for: UIControlState())
@@ -287,6 +308,32 @@ public extension SKPhotoBrowser {
             likeButton.setFrameSize(size)
         }
     }
+    
+    func updateLikeCount(_ count: NSNumber) {
+        if likeCountButton == nil {
+            configureLikeButton()
+        }
+        likeCountButton.setTitle(count.intValue.description, for: .normal)
+    }
+    
+    func updateUserButton(_ image: UIImage, size: CGSize? = nil) {
+        if userButton == nil {
+            configureUserButton()
+        }
+        userButton.setImage(image, for: UIControlState())
+        
+        if let size = size {
+            userButton.setFrameSize(size)
+        }
+    }
+    
+    func updateUserName(_ name: String) {
+        if userNameButton == nil {
+            configureUserButton()
+        }
+        userNameButton.setTitle(name, for: .normal)
+    }
+    
     
     func updateShareButton(_ image: UIImage, size: CGSize? = nil) {
         if shareButton == nil {
@@ -357,7 +404,9 @@ public extension SKPhotoBrowser {
         // reset
         cancelControlHiding()
         // start
-        controlVisibilityTimer = Timer.scheduledTimer(timeInterval: 4.0, target: self, selector: #selector(SKPhotoBrowser.hideControls(_:)), userInfo: nil, repeats: false)
+        if SKPhotoBrowserOptions.autoHideControls {
+            controlVisibilityTimer = Timer.scheduledTimer(timeInterval: 4.0, target: self, selector: #selector(SKPhotoBrowser.hideControls(_:)), userInfo: nil, repeats: false)
+        }
     }
     
     func hideControls() {
@@ -428,11 +477,25 @@ internal extension SKPhotoBrowser {
         if SKPhotoBrowserOptions.displayCommentButton {
             commentButton.alpha = 1
             commentButton.frame = commentButton.showFrame
+            
+            commentCountButton.alpha = 1
+            commentCountButton.frame = commentButton.showFrame.offsetBy(dx: 30, dy: 0)
         }
         
         if SKPhotoBrowserOptions.displayLikeButton {
             likeButton.alpha = 1
             likeButton.frame = likeButton.showFrame
+            
+            likeCountButton.alpha = 1
+            likeCountButton.frame = likeButton.showFrame.offsetBy(dx: 30, dy: 0)
+        }
+        if SKPhotoBrowserOptions.displayUserButton {
+            userButton.alpha = 1
+            userButton.frame = userButton.showFrame
+            
+            userNameButton.alpha = 1
+            userNameButton.frame = CGRect(x: userButton.showFrame.minX + 75, y: userButton.showFrame.minY + 10, width: 200, height: 60)
+            userButton.showFrame.offsetBy(dx: 70, dy: 0)
         }
         if SKPhotoBrowserOptions.displayShareButton {
             shareButton.alpha = 1
@@ -563,7 +626,14 @@ internal extension SKPhotoBrowser {
     func likeButtonPressed(_ sender: UIButton) {
         if let likeButtonAction = SKPhotoBrowserOptions.handleLikeButtonPressed {
             let photo = self.photos[currentPageIndex]
-            likeButtonAction(photo.underlyingObject)
+            likeButtonAction(photo.underlyingObject, photo)
+        }
+    }
+    
+    func userButtonPressed(_ sender: UIButton) {
+        if let userButtonAction = SKPhotoBrowserOptions.handleUserButtonPressed {
+            let photo = self.photos[currentPageIndex]
+            userButtonAction(photo.underlyingObject)
         }
     }
     
@@ -670,6 +740,11 @@ private extension SKPhotoBrowser {
         commentButton.addTarget(self, action: #selector(commentButtonPressed(_:)), for: .touchUpInside)
         commentButton.isHidden = !SKPhotoBrowserOptions.displayCommentButton
         view.addSubview(commentButton)
+        
+        commentCountButton = UIButton(frame: .zero)
+        commentCountButton.addTarget(self, action: #selector(commentButtonPressed(_:)), for: .touchUpInside)
+        commentCountButton.isHidden = !SKPhotoBrowserOptions.displayCommentButton
+        view.addSubview(commentCountButton)
     }
     
     func configureLikeButton() {
@@ -677,6 +752,24 @@ private extension SKPhotoBrowser {
         likeButton.addTarget(self, action: #selector(likeButtonPressed(_:)), for: .touchUpInside)
         likeButton.isHidden = !SKPhotoBrowserOptions.displayLikeButton
         view.addSubview(likeButton)
+        
+        likeCountButton = UIButton(frame: .zero)
+        likeCountButton.addTarget(self, action: #selector(likeButtonPressed(_:)), for: .touchUpInside)
+        likeCountButton.isHidden = !SKPhotoBrowserOptions.displayLikeButton
+        view.addSubview(likeCountButton)
+    }
+    
+    func configureUserButton() {
+        userButton = SKUserButton(frame: .zero)
+        userButton.addTarget(self, action: #selector(userButtonPressed(_:)), for: .touchUpInside)
+        userButton.isHidden = !SKPhotoBrowserOptions.displayUserButton
+        view.addSubview(userButton)
+        
+        userNameButton = UIButton(frame: .zero)
+        userNameButton.addTarget(self, action: #selector(userButtonPressed(_:)), for: .touchUpInside)
+        userNameButton.isHidden = !SKPhotoBrowserOptions.displayUserButton
+        userNameButton.contentHorizontalAlignment = .left
+        view.addSubview(userNameButton)
     }
     
     func configureShareButton() {
@@ -718,10 +811,25 @@ private extension SKPhotoBrowser {
                         if SKPhotoBrowserOptions.displayCommentButton {
                             self.commentButton.alpha = alpha
                             self.commentButton.frame = hidden ? self.commentButton.hideFrame : self.commentButton.showFrame
+                            
+                            self.commentCountButton.alpha = alpha
+                            self.commentCountButton.frame = hidden ? self.commentButton.hideFrame.offsetBy(dx: 30, dy: 0) : self.commentButton.showFrame.offsetBy(dx: 30, dy: 0)
                         }
                         if SKPhotoBrowserOptions.displayLikeButton {
                             self.likeButton.alpha = alpha
                             self.likeButton.frame = hidden ? self.likeButton.hideFrame : self.likeButton.showFrame
+                            
+                            self.likeCountButton.alpha = alpha
+                            self.likeCountButton.frame = hidden ? self.likeButton.hideFrame.offsetBy(dx: 30, dy: 0) : self.likeButton.showFrame.offsetBy(dx: 30, dy: 0)
+                            
+                        }
+                        if SKPhotoBrowserOptions.displayUserButton {
+                            self.userButton.alpha = alpha
+                            self.userButton.frame = hidden ? self.userButton.hideFrame : self.userButton.showFrame
+                            
+                            self.userNameButton.alpha = alpha
+                            self.userNameButton.frame = hidden ? CGRect(x: self.userButton.showFrame.minX + 75, y: self.userButton.showFrame.minY - 20, width: 200, height: 60) : CGRect(x: self.userButton.showFrame.minX + 75, y: self.userButton.showFrame.minY + 10, width: 200, height: 60)
+                            
                         }
                         if SKPhotoBrowserOptions.displayShareButton {
                             self.shareButton.alpha = alpha
@@ -779,6 +887,10 @@ extension SKPhotoBrowser: UIScrollViewDelegate {
         
         if currentPageIndex != previousCurrentPage {
             delegate?.didShowPhotoAtIndex?(currentPageIndex)
+            if let entryLoadedAction = SKPhotoBrowserOptions.handleEntryLoaded {
+                let photo = self.photos[currentPageIndex]
+                entryLoadedAction(photo.underlyingObject, photo)
+            }
             toolbar.updateToolbar(currentPageIndex)
         }
     }
